@@ -1,47 +1,41 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>BCA Mutation Toolbox</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f9; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background: #228b22; color: white; }
-        .input-group { margin-bottom: 10px; }
-        input { padding: 8px; width: 200px; }
-    </style>
-</head>
-<body>
+import streamlit as st
+import gspread
+import pandas as pd
 
-    <h2>Input Data Mutasi</h2>
-    <div class="input-group">
-        <input type="date" id="tgl">
-        <input type="time" id="waktu">
-        <input type="text" id="nama" placeholder="Nama Nasabah">
-        <input type="number" id="nominal" placeholder="Nominal">
-        <button onclick="addData()">Tambah Data</button>
-    </div>
+# Konfigurasi halaman
+st.set_page_config(page_title="Mutasi BCA Dashboard", layout="wide")
+st.title("📊 Live Mutasi BCA")
 
-    <table>
-        <thead>
-            <tr><th>Tanggal</th><th>Waktu</th><th>Nama</th><th>Nominal</th><th>Aksi</th></tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-    </table>
+# Fungsi untuk mengambil data dari Google Sheets
+def get_data():
+    # Menggunakan st.secrets agar lebih aman (tidak perlu file credentials.json di GitHub)
+    creds_dict = st.secrets["gcp_service_account"]
+    gc = gspread.service_account_from_dict(creds_dict)
+    
+    # Ganti dengan nama file spreadsheet Anda
+    sh = gc.open("NAMA_FILE_SPREADSHEET_ANDA") 
+    worksheet = sh.sheet1
+    
+    # Mengambil data
+    data = worksheet.get_all_records()
+    df = pd.DataFrame(data)
+    
+    # Memastikan kolom sesuai urutan
+    # Pastikan nama kolom di Google Sheet sama dengan list di bawah
+    cols = ["Tanggal", "Jam", "Nama", "Nominal"]
+    return df[cols]
 
-    <script>
-        function addData() {
-            let tableBody = document.getElementById("tableBody");
-            let row = `<tr>
-                <td>${document.getElementById("tgl").value}</td>
-                <td>${document.getElementById("waktu").value}</td>
-                <td>${document.getElementById("nama").value}</td>
-                <td>${document.getElementById("nominal").value}</td>
-                <td><button onclick="this.parentElement.parentElement.remove()">Hapus</button></td>
-            </tr>`;
-            tableBody.insertAdjacentHTML('beforeend', row);
-        }
-    </script>
-</body>
-</html>
+# Tampilan utama
+try:
+    df = get_data()
+    
+    # Menampilkan tabel dengan gaya yang rapi
+    st.dataframe(df, use_container_width=True)
+    
+    # Tombol refresh manual
+    if st.button('Refresh Data Terbaru'):
+        st.rerun()
+        
+except Exception as e:
+    st.error(f"Gagal memuat data: {e}")
+    st.info("Pastikan nama spreadsheet sudah benar dan Service Account memiliki akses Editor.")
