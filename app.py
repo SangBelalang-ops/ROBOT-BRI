@@ -1,35 +1,25 @@
 import streamlit as st
 import pandas as pd
-import re
+import io
 
-st.title("✂️ Data Cleaner - Anti Ribet")
+st.title("✂️ Data Cleaner - Anti Sampah")
 
-# Penjelasan singkat buat Anda
-st.write("Paste data berantakan (Tiket & Nominal) di bawah ini:")
+raw_data = st.text_area("Paste data dari Excel di sini:", height=200)
 
-raw_data = st.text_area("Data di sini:", height=200, placeholder="Contoh: Tiket 123456789 Nominal 50000...")
-
-if st.button("Hapus Sampah & Rapikan"):
-    lines = raw_data.split('\n')
-    data_bersih = []
+if st.button("Proses Data"):
+    # Membaca data sebagai file CSV/Tab Separated
+    df_input = pd.read_csv(io.StringIO(raw_data), sep='\t', header=None)
     
-    for line in lines:
-        if not line.strip(): continue # Skip baris kosong
-        
-        # LOGIKA: Ambil angka pertama sebagai TIKET, angka kedua sebagai NOMINAL
-        # Ini akan mengabaikan spasi, huruf, dan simbol di antaranya
-        angka_angka = re.findall(r'\d+', line.replace('.', '').replace(',', ''))
-        
-        if len(angka_angka) >= 2:
-            data_bersih.append({
-                "TICKET": angka_angka[0],
-                "NOMINAL": angka_angka[1]
-            })
+    # Ambil kolom yang relevan (misal kolom 0 untuk Tiket, kolom 3 untuk Nominal)
+    # Kita filter supaya cuma baris yang ID-nya diawali 'D' yang masuk
+    df_clean = df_input[df_input[0].astype(str).str.startswith('D', na=False)].copy()
     
-    if data_bersih:
-        df = pd.DataFrame(data_bersih)
-        st.table(df)
-        # Tombol Download kalau mau dipindah ke Excel
-        st.download_button("Download jadi CSV", df.to_csv(index=False), "data_bersih.csv", "text/csv")
-    else:
-        st.error("Data ga kebaca! Pastikan ada dua angka di setiap baris.")
+    # Ambil kolom 0 (Tiket) dan kolom 3 (Nominal)
+    df_final = df_clean[[0, 3]].rename(columns={0: 'TICKET', 3: 'NOMINAL'})
+    
+    # Tampilkan
+    st.table(df_final)
+    
+    # Download
+    csv = df_final.to_csv(index=False).encode('utf-8')
+    st.download_button("Download CSV", csv, "data_bersih.csv", "text/csv")
