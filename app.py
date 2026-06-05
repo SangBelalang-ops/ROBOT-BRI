@@ -1,9 +1,34 @@
 import streamlit as st
 import pandas as pd
+import re
 
-# Masukkan link CSV hasil Publish to web di sini
-CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTv0RRg3nakuAvSwDSWi8Vc8BCukKV6CrqSidGQ6FuDh7Vf7LqA9qxFXNPn2hOe-yuaW9kbFa7JJKJw/pub?gid=177426029&single=true&output=csv"
+st.title("⚡ Data Cleaner - BRI AGAM")
 
-st.title("📊 BRI AGAM BOT")
-df = pd.read_csv(CSV_URL)
-st.dataframe(df, use_container_width=True)
+# Kotak Input
+raw_data = st.text_area("Paste data berantakan di sini:", height=200)
+
+if st.button("Bersihkan Data"):
+    # Logika untuk mencari ID Tiket dan Nominal
+    # Asumsi: ID Tiket adalah angka, Nominal adalah angka di akhir atau setelah ID
+    # Kita pakai regex untuk mengambil pola (bisa disesuaikan nanti)
+    lines = raw_data.split('\n')
+    cleaned_data = []
+    
+    for line in lines:
+        if line.strip():
+            # Cari angka (contoh: ID tiket 10 digit, nominal angka panjang)
+            # Ini contoh regex, nanti tinggal kita sesuaikan dengan format tiket Anda
+            matches = re.findall(r'\d+', line)
+            if len(matches) >= 2:
+                cleaned_data.append({
+                    "Tiket ID": matches[0],
+                    "Nominal": matches[1]
+                })
+    
+    # Tampilkan Tabel
+    if cleaned_data:
+        df = pd.DataFrame(cleaned_data)
+        st.table(df)
+        st.success("Data berhasil dibersihkan!")
+    else:
+        st.error("Data tidak dikenali. Coba paste ulang!")
