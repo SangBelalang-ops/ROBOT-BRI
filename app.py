@@ -1,26 +1,20 @@
-# Pseudo-code (gambaran logika)
-import pygame
+from direct.showbase.ShowBase import ShowBase
 
-# 1. Setup Gambar
-keranjang_rect = pygame.Rect(500, 400, 100, 100) # Area keranjang
-kue_rect = pygame.Rect(100, 100, 50, 50)         # Posisi kue di etalase
-
-# 2. Loop Utama Game
-running = True
-dragging = False
-
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if kue_rect.collidepoint(event.pos):
-                dragging = True
+class GameTokoKue(ShowBase):
+    def __init__(self):
+        ShowBase.__init__(self)
         
-        if event.type == pygame.MOUSEBUTTONUP:
-            dragging = False
-            # Cek apakah dilepas di atas keranjang
-            if kue_rect.colliderect(keranjang_rect):
-                print("Kue masuk keranjang!")
-                keranjang_belanja.append("Kue Coklat")
+        # Memuat model 3D (panda adalah model bawaan untuk tes)
+        self.kue = self.loader.loadModel("models/panda")
+        self.kue.reparentTo(self.render)
+        self.kue.setScale(0.25, 0.25, 0.25)
+        self.kue.setPos(0, 10, 0) # Posisi kue di etalase
 
-    if dragging:
-        kue_rect.center = pygame.mouse.get_pos() # Ikuti kursor
+        # Mengatur posisi kamera
+        self.camera.setPos(0, 0, 0)
+        
+        # Tambahkan fungsi interaksi mouse di sini nanti
+        print("Toko Kue 3D siap dibangun!")
+
+game = GameTokoKue()
+game.run()
