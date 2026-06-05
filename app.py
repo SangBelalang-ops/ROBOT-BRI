@@ -1,13 +1,23 @@
-from flask import Flask, render_template
-from flask_socketio import SocketIO, send
+import tkinter as tk
+from tkinter import scrolledtext
 
-app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*")
+def kirim_pesan():
+    pesan = entry.get()
+    chat_area.config(state='normal')
+    chat_area.insert(tk.END, "Saya: " + pesan + "\n")
+    chat_area.config(state='disabled')
+    entry.delete(0, tk.END)
 
-@socketio.on('message')
-def handleMessage(msg):
-    print('Pesan diterima: ' + msg)
-    send(msg, broadcast=True) # Kirim ke semua teman yang terhubung
+root = tk.Tk()
+root.title("Chat Shift Malam")
 
-if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000)
+chat_area = scrolledtext.ScrolledText(root, state='disabled', height=10)
+chat_area.pack(padx=10, pady=10)
+
+entry = tk.Entry(root, width=50)
+entry.pack(padx=10, pady=5)
+
+btn = tk.Button(root, text="Kirim", command=kirim_pesan)
+btn.pack(pady=5)
+
+root.mainloop()
