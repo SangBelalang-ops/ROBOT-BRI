@@ -1,52 +1,26 @@
-import streamlit as st
-import pandas as pd
-import re
-import io
+# Pseudo-code (gambaran logika)
+import pygame
 
-st.title("🧹 Pembersih Data Tiket & Nominal")
+# 1. Setup Gambar
+keranjang_rect = pygame.Rect(500, 400, 100, 100) # Area keranjang
+kue_rect = pygame.Rect(100, 100, 50, 50)         # Posisi kue di etalase
 
-# Instruksi buat user
-st.write("Silakan paste data mentah Anda di kotak bawah ini:")
-raw_data = st.text_area("Paste Data Di Sini:", height=300, placeholder="Paste data berantakan di sini...")
+# 2. Loop Utama Game
+running = True
+dragging = False
 
-if st.button("Bersihkan & Download CSV"):
-    if raw_data:
-        rows = []
-        # Memproses baris demi baris
-        lines = raw_data.split('\n')
-        for line in lines:
-            # 1. Cari Tiket: Pola huruf 'D' diikuti deretan angka
-            tiket_match = re.search(r'D\d+', line)
-            
-            # 2. Cari Nominal: Cari angka yang formatnya ribuan (misal 50.000 atau 50000)
-            # Kita cari angka yang paling kanan di baris tersebut
-            nominals = re.findall(r'[\d\.,]+', line)
-            
-            if tiket_match and nominals:
-                # Mengambil nominal yang paling mungkin benar (angka terbesar atau angka di posisi akhir)
-                nominal_clean = nominals[-1].replace('.', '').replace(',', '')
-                
-                # Pastikan nominalnya murni angka
-                if nominal_clean.isdigit():
-                    rows.append({
-                        "TICKET": tiket_match.group(0),
-                        "NOMINAL": nominal_clean
-                    })
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if kue_rect.collidepoint(event.pos):
+                dragging = True
         
-        if rows:
-            df = pd.DataFrame(rows)
-            st.success(f"Berhasil membersihkan {len(df)} data!")
-            st.table(df)
-            
-            # Konversi ke CSV untuk Download
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="📥 Klik di sini untuk Download CSV",
-                data=csv,
-                file_name='data_bersih.csv',
-                mime='text/csv'
-            )
-        else:
-            st.warning("Data tidak ditemukan! Pastikan format data mengandung ID yang diawali 'D'.")
-    else:
-        st.error("Kotak masih kosong! Masukkan data terlebih dahulu.")
+        if event.type == pygame.MOUSEBUTTONUP:
+            dragging = False
+            # Cek apakah dilepas di atas keranjang
+            if kue_rect.colliderect(keranjang_rect):
+                print("Kue masuk keranjang!")
+                keranjang_belanja.append("Kue Coklat")
+
+    if dragging:
+        kue_rect.center = pygame.mouse.get_pos() # Ikuti kursor
