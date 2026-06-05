@@ -8,17 +8,30 @@ st.title("📊 Live Mutasi BCA")
 
 # Fungsi untuk mengambil data dari Google Sheets
 def get_data():
-    # Menggunakan st.secrets agar lebih aman (tidak perlu file credentials.json di GitHub)
     creds_dict = st.secrets["gcp_service_account"]
     gc = gspread.service_account_from_dict(creds_dict)
     
-    # Ganti dengan nama file spreadsheet Anda
+    # Buka spreadsheet
     sh = gc.open("NAMA_FILE_SPREADSHEET_ANDA") 
-    worksheet = sh.sheet1
+    # Buka sheet dengan nama spesifik
+    worksheet = sh.worksheet("BOT MUT")
     
-    # Mengambil data
-    data = worksheet.get_all_records()
-    df = pd.DataFrame(data)
+    # Ambil data dari range spesifik
+    # C7:D7 = Tanggal dan Waktu
+    # G7:H7 = Nama dan Nominal
+    data_tanggal_waktu = worksheet.get("C7:D7")[0]
+    data_nama_nominal = worksheet.get("G7:H7")[0]
+    
+    # Gabungkan menjadi satu baris data
+    row = {
+        "Tanggal": data_tanggal_waktu[0],
+        "Jam": data_tanggal_waktu[1],
+        "Nama": data_nama_nominal[0],
+        "Nominal": data_nama_nominal[1]
+    }
+    
+    # Balikkan dalam bentuk DataFrame agar tabel rapi
+    return pd.DataFrame([row])
     
     # Memastikan kolom sesuai urutan
     # Pastikan nama kolom di Google Sheet sama dengan list di bawah
