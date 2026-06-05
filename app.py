@@ -2,37 +2,38 @@ import streamlit as st
 import pandas as pd
 import io
 
-st.title("🚀 Data Combiner & Pivot")
+st.title("📊 Pivot Data Cleaner (Dual Input)")
 
-# Inisialisasi state untuk menampung data gabungan
-if 'combined_data' not in st.session_state:
-    st.session_state.combined_data = pd.DataFrame(columns=['TICKET', 'NOMINAL'])
+# Layout 2 kolom untuk input
+col1, col2 = st.columns(2)
 
-# Input berkali-kali
-raw_data = st.text_area("Tempel data di sini (bisa dilakukan berkali-kali):", height=150)
+with col1:
+    data_a = st.text_area("Paste Data 1 (Doc):", height=150)
+with col2:
+    data_b = st.text_area("Paste Data 2 (Panel):", height=150)
 
-if st.button("Gabung ke Tabel"):
+def proses_data(raw):
     try:
-        # Memproses data (Filter ID diawali 'D')
-        df_input = pd.read_csv(io.StringIO(raw_data), sep='\t', header=None)
+        df_input = pd.read_csv(io.StringIO(raw), sep='\t', header=None)
+        # Filter hanya yang diawali 'D'
         df_clean = df_input[df_input[0].astype(str).str.startswith('D', na=False)].copy()
-        df_new = df_clean[[0, 3]].rename(columns={0: 'TICKET', 3: 'NOMINAL'})
-        
-        # Gabungkan dengan data lama (Pivot/Append)
-        st.session_state.combined_data = pd.concat([st.session_state.combined_data, df_new], ignore_index=True)
-        st.success("Data berhasil ditambah!")
+        return df_clean[[0, 3]].rename(columns={0: 'TICKET', 3: 'NOMINAL'})
     except:
-        st.error("Gagal! Pastikan format data saat dipaste benar.")
+        return pd.DataFrame(columns=['TICKET', 'NOMINAL'])
 
-# Tombol Reset
-if st.button("Hapus Semua Data"):
-    st.session_state.combined_data = pd.DataFrame(columns=['TICKET', 'NOMINAL'])
-
-# Tampilkan tabel yang sudah digabung
-if not st.session_state.combined_data.empty:
-    st.subheader("Data Gabungan (Siap Copy):")
-    st.dataframe(st.session_state.combined_data, use_container_width=True)
+if st.button("Pivot & Gabungkan"):
+    df_1 = proses_data(data_a)
+    df_2 = proses_data(data_b)
     
-    # Fitur download
-    csv = st.session_state.combined_data.to_csv(index=False).encode('utf-8')
-    st.download_button("💾 Download Gabungan (.csv)", csv, "data_gabungan.csv", "text/csv")
+    # Gabungkan (Pivot/Append)
+    df_result = pd.concat([df_1, df_2], ignore_index=True)
+    
+    # Hapus duplikat (opsional)
+    df_result = df_result.drop_duplicates()
+    
+    st.subheader("Hasil Gabungan:")
+    st.dataframe(df_result, use_container_width=True)
+    
+    # Download
+    csv = df_result.to_csv(index=False).encode('utf-8')
+    st.download_button("💾 Download Gabungan (.csv)", csv, "data_pivot.csv", "text/csv")
