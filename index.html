@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>BCA Mutation Toolbox</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f9; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #228b22; color: white; }
+        .input-group { margin-bottom: 10px; }
+        input { padding: 8px; width: 200px; }
+    </style>
+</head>
+<body>
+
+    <h2>Input Data Mutasi</h2>
+    <div class="input-group">
+        <input type="date" id="tgl">
+        <input type="time" id="waktu">
+        <input type="text" id="nama" placeholder="Nama Nasabah">
+        <input type="number" id="nominal" placeholder="Nominal">
+        <button onclick="addData()">Tambah Data</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr><th>Tanggal</th><th>Waktu</th><th>Nama</th><th>Nominal</th><th>Aksi</th></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+    <script>
+        function addData() {
+            let tableBody = document.getElementById("tableBody");
+            let row = `<tr>
+                <td>${document.getElementById("tgl").value}</td>
+                <td>${document.getElementById("waktu").value}</td>
+                <td>${document.getElementById("nama").value}</td>
+                <td>${document.getElementById("nominal").value}</td>
+                <td><button onclick="this.parentElement.parentElement.remove()">Hapus</button></td>
+            </tr>`;
+            tableBody.insertAdjacentHTML('beforeend', row);
+        }
+    </script>
+</body>
+</html>
