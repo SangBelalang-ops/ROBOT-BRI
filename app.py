@@ -1,39 +1,52 @@
 import streamlit as st
 import pandas as pd
+import re
 import io
 
-st.title("📊 Pivot Data Cleaner (Dual Input)")
+st.title("🧹 Pembersih Data Tiket & Nominal")
 
-# Layout 2 kolom untuk input
-col1, col2 = st.columns(2)
+# Instruksi buat user
+st.write("Silakan paste data mentah Anda di kotak bawah ini:")
+raw_data = st.text_area("Paste Data Di Sini:", height=300, placeholder="Paste data berantakan di sini...")
 
-with col1:
-    data_a = st.text_area("Paste Data 1 (Doc):", height=150)
-with col2:
-    data_b = st.text_area("Paste Data 2 (Panel):", height=150)
-
-def proses_data(raw):
-    try:
-        df_input = pd.read_csv(io.StringIO(raw), sep='\t', header=None)
-        # Filter hanya yang diawali 'D'
-        df_clean = df_input[df_input[0].astype(str).str.startswith('D', na=False)].copy()
-        return df_clean[[0, 3]].rename(columns={0: 'TICKET', 3: 'NOMINAL'})
-    except:
-        return pd.DataFrame(columns=['TICKET', 'NOMINAL'])
-
-if st.button("Pivot & Gabungkan"):
-    df_1 = proses_data(data_a)
-    df_2 = proses_data(data_b)
-    
-    # Gabungkan (Pivot/Append)
-    df_result = pd.concat([df_1, df_2], ignore_index=True)
-    
-    # Hapus duplikat (opsional)
-    df_result = df_result.drop_duplicates()
-    
-    st.subheader("Hasil Gabungan:")
-    st.dataframe(df_result, use_container_width=True)
-    
-    # Download
-    csv = df_result.to_csv(index=False).encode('utf-8')
-    st.download_button("💾 Download Gabungan (.csv)", csv, "data_pivot.csv", "text/csv")
+if st.button("Bersihkan & Download CSV"):
+    if raw_data:
+        rows = []
+        # Memproses baris demi baris
+        lines = raw_data.split('\n')
+        for line in lines:
+            # 1. Cari Tiket: Pola huruf 'D' diikuti deretan angka
+            tiket_match = re.search(r'D\d+', line)
+            
+            # 2. Cari Nominal: Cari angka yang formatnya ribuan (misal 50.000 atau 50000)
+            # Kita cari angka yang paling kanan di baris tersebut
+            nominals = re.findall(r'[\d\.,]+', line)
+            
+            if tiket_match and nominals:
+                # Mengambil nominal yang paling mungkin benar (angka terbesar atau angka di posisi akhir)
+                nominal_clean = nominals[-1].replace('.', '').replace(',', '')
+                
+                # Pastikan nominalnya murni angka
+                if nominal_clean.isdigit():
+                    rows.append({
+                        "TICKET": tiket_match.group(0),
+                        "NOMINAL": nominal_clean
+                    })
+        
+        if rows:
+            df = pd.DataFrame(rows)
+            st.success(f"Berhasil membersihkan {len(df)} data!")
+            st.table(df)
+            
+            # Konversi ke CSV untuk Download
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Klik di sini untuk Download CSV",
+                data=csv,
+                file_name='data_bersih.csv',
+                mime='text/csv'
+            )
+        else:
+            st.warning("Data tidak ditemukan! Pastikan format data mengandung ID yang diawali 'D'.")
+    else:
+        st.error("Kotak masih kosong! Masukkan data terlebih dahulu.")
