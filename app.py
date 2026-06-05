@@ -2,33 +2,34 @@ import streamlit as st
 import pandas as pd
 import re
 
-st.title("⚡ Data Cleaner - BRI AGAM")
+st.title("✂️ Data Cleaner - Anti Ribet")
 
-# Kotak Input
-raw_data = st.text_area("Paste data berantakan di sini:", height=200)
+# Penjelasan singkat buat Anda
+st.write("Paste data berantakan (Tiket & Nominal) di bawah ini:")
 
-if st.button("Bersihkan Data"):
-    # Logika untuk mencari ID Tiket dan Nominal
-    # Asumsi: ID Tiket adalah angka, Nominal adalah angka di akhir atau setelah ID
-    # Kita pakai regex untuk mengambil pola (bisa disesuaikan nanti)
+raw_data = st.text_area("Data di sini:", height=200, placeholder="Contoh: Tiket 123456789 Nominal 50000...")
+
+if st.button("Hapus Sampah & Rapikan"):
     lines = raw_data.split('\n')
-    cleaned_data = []
+    data_bersih = []
     
     for line in lines:
-        if line.strip():
-            # Cari angka (contoh: ID tiket 10 digit, nominal angka panjang)
-            # Ini contoh regex, nanti tinggal kita sesuaikan dengan format tiket Anda
-            matches = re.findall(r'\d+', line)
-            if len(matches) >= 2:
-                cleaned_data.append({
-                    "Tiket ID": matches[0],
-                    "Nominal": matches[1]
-                })
+        if not line.strip(): continue # Skip baris kosong
+        
+        # LOGIKA: Ambil angka pertama sebagai TIKET, angka kedua sebagai NOMINAL
+        # Ini akan mengabaikan spasi, huruf, dan simbol di antaranya
+        angka_angka = re.findall(r'\d+', line.replace('.', '').replace(',', ''))
+        
+        if len(angka_angka) >= 2:
+            data_bersih.append({
+                "TICKET": angka_angka[0],
+                "NOMINAL": angka_angka[1]
+            })
     
-    # Tampilkan Tabel
-    if cleaned_data:
-        df = pd.DataFrame(cleaned_data)
+    if data_bersih:
+        df = pd.DataFrame(data_bersih)
         st.table(df)
-        st.success("Data berhasil dibersihkan!")
+        # Tombol Download kalau mau dipindah ke Excel
+        st.download_button("Download jadi CSV", df.to_csv(index=False), "data_bersih.csv", "text/csv")
     else:
-        st.error("Data tidak dikenali. Coba paste ulang!")
+        st.error("Data ga kebaca! Pastikan ada dua angka di setiap baris.")
